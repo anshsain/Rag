@@ -1,22 +1,38 @@
-import streamlit as st
 import os
+import streamlit as st
 
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import Qdrant
 from qdrant_client import QdrantClient
+from qdrant_client.models import VectorParams, Distance
 
-# ------------------ CONFIG ------------------
+# ------------------ UI ------------------
 
 st.set_page_config(page_title="Mini RAG", layout="centered")
 st.title("📄 Mini RAG Application")
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-
 if not GEMINI_API_KEY:
-    st.error("❌ GEMINI_API_KEY not set")
+    st.error("GEMINI_API_KEY not set")
     st.stop()
+
+# ------------------ QDRANT (LOCAL, SAFE) ------------------
+
+client = QdrantClient(":memory:")
+
+COLLECTION_NAME = "mini_rag_docs"
+VECTOR_SIZE = 384  # MiniLM embeddings
+
+# ✅ Explicitly create collection (REQUIRED for local mode)
+client.create_collection(
+    collection_name=COLLECTION_NAME,
+    vectors_config=VectorParams(
+        size=VECTOR_SIZE,
+        distance=Distance.COSINE,
+    ),
+)
 
 # ------------------ EMBEDDINGS ------------------
 
@@ -24,7 +40,13 @@ embeddings = HuggingFaceEmbeddings(
     model_name="sentence-transformers/paraphrase-MiniLM-L3-v2"
 )
 
-# ------------------ ONE-TIME DOCUMENT ------------------
+vectorstore = Qdrant(
+    client=client,
+    collection_name=COLLECTION_NAME,
+    embeddings=embeddings,
+)
+
+# ------------------ ONE-TIME INGEST ------------------
 
 base_text = """
 India is a country in South Asia.
@@ -39,18 +61,7 @@ splitter = RecursiveCharacterTextSplitter(
 )
 
 docs = splitter.create_documents([base_text])
-
-# ------------------ QDRANT (IN-MEMORY, CORRECT WAY) ------------------
-# 🔥 THIS IS THE KEY FIX
-
-client = QdrantClient(":memory:")
-
-vectorstore = Qdrant.from_documents(
-    docs,
-    embedding=embeddings,
-    client=client,
-    collection_name="mini_rag_docs",
-)
+vectorstore.add_documents(docs)
 
 # ------------------ LLM ------------------
 
