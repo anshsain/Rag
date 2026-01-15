@@ -4,14 +4,14 @@ import streamlit as st
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_community.embeddings import HuggingFaceEmbeddings
-from langchain_community.vectorstores import FAISS
+from langchain_community.vectorstores import Chroma
 
 # ------------------ PAGE CONFIG ------------------
 
 st.set_page_config(page_title="Mini RAG", layout="centered")
 st.title("📄 Mini RAG Application")
 
-# ------------------ ENV CHECK ------------------
+# ------------------ ENV ------------------
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 if not GEMINI_API_KEY:
@@ -46,7 +46,7 @@ if st.button("Ingest"):
 
     docs = splitter.create_documents([text])
 
-    st.session_state.vectorstore = FAISS.from_documents(
+    st.session_state.vectorstore = Chroma.from_documents(
         docs,
         st.session_state.embeddings,
     )
