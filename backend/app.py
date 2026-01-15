@@ -4,9 +4,7 @@ import streamlit as st
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_community.embeddings import HuggingFaceEmbeddings
-from langchain_community.vectorstores import Qdrant
-from qdrant_client import QdrantClient
-from qdrant_client.models import VectorParams, Distance
+from langchain_community.vectorstores import FAISS
 
 # ------------------ PAGE CONFIG ------------------
 
@@ -20,34 +18,14 @@ if not GEMINI_API_KEY:
     st.error("GEMINI_API_KEY not set")
     st.stop()
 
-# ------------------ SESSION INIT ------------------
+# ------------------ INIT SESSION ------------------
 
 if "vectorstore" not in st.session_state:
-    # In-memory Qdrant (safe, no auth, no network)
-    client = QdrantClient(":memory:")
-
-    COLLECTION_NAME = "mini_rag_docs"
-    VECTOR_SIZE = 384  # MiniLM dimension
-
-    client.create_collection(
-        collection_name=COLLECTION_NAME,
-        vectors_config=VectorParams(
-            size=VECTOR_SIZE,
-            distance=Distance.COSINE,
-        ),
-    )
-
     embeddings = HuggingFaceEmbeddings(
         model_name="sentence-transformers/paraphrase-MiniLM-L3-v2"
     )
-
-    st.session_state.vectorstore = Qdrant(
-        client=client,
-        collection_name=COLLECTION_NAME,
-        embeddings=embeddings,
-    )
-
-    st.session_state.has_data = False
+    st.session_state.vectorstore = None
+    st.session_state.embeddings = embeddings
 
 # ------------------ INGEST ------------------
 
@@ -67,8 +45,10 @@ if st.button("Ingest"):
 
     docs = splitter.create_documents([text])
 
-    st.session_state.vectorstore.add_documents(docs)
-    st.session_state.has_data = True
+    st.session_state.vectorstore = FAISS.from_documents(
+        docs,
+        st.session_state.embeddings,
+    )
 
     st.success(f"Ingested {len(docs)} chunks")
 
@@ -91,7 +71,7 @@ if st.button("Ask"):
         st.warning("Please enter a question.")
         st.stop()
 
-    if not st.session_state.has_data:
+    if st.session_state.vectorstore is None:
         st.warning("Please ingest a document first.")
         st.stop()
 
