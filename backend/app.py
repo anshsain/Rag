@@ -18,14 +18,15 @@ if not GEMINI_API_KEY:
     st.error("GEMINI_API_KEY not set")
     st.stop()
 
-# ------------------ INIT SESSION ------------------
+# ------------------ SESSION INIT ------------------
 
-if "vectorstore" not in st.session_state:
-    embeddings = HuggingFaceEmbeddings(
+if "embeddings" not in st.session_state:
+    st.session_state.embeddings = HuggingFaceEmbeddings(
         model_name="sentence-transformers/paraphrase-MiniLM-L3-v2"
     )
+
+if "vectorstore" not in st.session_state:
     st.session_state.vectorstore = None
-    st.session_state.embeddings = embeddings
 
 # ------------------ INGEST ------------------
 
