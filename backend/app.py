@@ -36,7 +36,7 @@ embeddings = HuggingFaceEmbeddings(
 vectorstore = Qdrant(
     client=client,
     collection_name=COLLECTION_NAME,
-    embedding=embeddings,
+    embeddings=embeddings,
 )
 
 llm = ChatGoogleGenerativeAI(
