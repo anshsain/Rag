@@ -2,8 +2,10 @@ import streamlit as st
 import os
 
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_google_genai import (
+    ChatGoogleGenerativeAI,
+    GoogleGenerativeAIEmbeddings
+)
 from langchain_community.vectorstores import Qdrant
 from qdrant_client import QdrantClient
 
@@ -24,15 +26,16 @@ if not QDRANT_URL or not QDRANT_API_KEY or not GEMINI_API_KEY:
 
 COLLECTION_NAME = "mini_rag_docs"
 
-# ================== INIT CLIENTS ==================
+# ================== INIT ==================
 
 client = QdrantClient(
     url=QDRANT_URL,
     api_key=QDRANT_API_KEY,
 )
 
-embeddings = HuggingFaceEmbeddings(
-    model_name="sentence-transformers/paraphrase-MiniLM-L3-v2"
+embeddings = GoogleGenerativeAIEmbeddings(
+    model="models/embedding-001",
+    google_api_key=GEMINI_API_KEY
 )
 
 vectorstore = Qdrant(
@@ -49,13 +52,13 @@ llm = ChatGoogleGenerativeAI(
 
 # ================== INGEST ==================
 
-st.subheader("Ingest Document")
+st.subheader("📥 Ingest Document")
 
 text = st.text_area("Paste text to ingest")
 
 if st.button("Ingest"):
     if not text.strip():
-        st.warning("Please paste some text first.")
+        st.warning("Please paste some text.")
     else:
         splitter = RecursiveCharacterTextSplitter(
             chunk_size=800,
@@ -67,7 +70,7 @@ if st.button("Ingest"):
 
 # ================== QUERY ==================
 
-st.subheader("Ask a Question")
+st.subheader("❓ Ask a Question")
 
 question = st.text_input("Your question")
 
@@ -79,7 +82,7 @@ if st.button("Ask"):
     docs = vectorstore.similarity_search(question, k=4)
 
     if not docs:
-        st.warning("No relevant information found in the documents.")
+        st.warning("No relevant context found.")
         st.stop()
 
     context = "\n\n".join(
@@ -101,9 +104,9 @@ Answer with citations like [1], [2].
 
     response = llm.invoke(prompt)
 
-    st.markdown("### Answer")
+    st.markdown("### ✅ Answer")
     st.write(response.content)
 
-    st.markdown("### Sources")
+    st.markdown("### 📚 Sources")
     for i, doc in enumerate(docs):
         st.markdown(f"[{i+1}] {doc.page_content[:200]}...")
