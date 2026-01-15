@@ -8,7 +8,7 @@ from langchain_community.vectorstores import Qdrant
 from qdrant_client import QdrantClient
 from qdrant_client.models import VectorParams, Distance
 
-# ------------------ UI ------------------
+# ------------------ CONFIG ------------------
 
 st.set_page_config(page_title="Mini RAG", layout="centered")
 st.title("📄 Mini RAG Application")
@@ -18,50 +18,50 @@ if not GEMINI_API_KEY:
     st.error("GEMINI_API_KEY not set")
     st.stop()
 
-# ------------------ QDRANT (LOCAL, SAFE) ------------------
+# ------------------ INIT (RUN ONCE) ------------------
 
-client = QdrantClient(":memory:")
+if "vectorstore" not in st.session_state:
 
-COLLECTION_NAME = "mini_rag_docs"
-VECTOR_SIZE = 384  # MiniLM embeddings
+    client = QdrantClient(":memory:")
 
-# ✅ Explicitly create collection (REQUIRED for local mode)
-client.create_collection(
-    collection_name=COLLECTION_NAME,
-    vectors_config=VectorParams(
-        size=VECTOR_SIZE,
-        distance=Distance.COSINE,
-    ),
-)
+    COLLECTION_NAME = "mini_rag_docs"
+    VECTOR_SIZE = 384
 
-# ------------------ EMBEDDINGS ------------------
+    client.create_collection(
+        collection_name=COLLECTION_NAME,
+        vectors_config=VectorParams(
+            size=VECTOR_SIZE,
+            distance=Distance.COSINE,
+        ),
+    )
 
-embeddings = HuggingFaceEmbeddings(
-    model_name="sentence-transformers/paraphrase-MiniLM-L3-v2"
-)
+    embeddings = HuggingFaceEmbeddings(
+        model_name="sentence-transformers/paraphrase-MiniLM-L3-v2"
+    )
 
-vectorstore = Qdrant(
-    client=client,
-    collection_name=COLLECTION_NAME,
-    embeddings=embeddings,
-)
+    vectorstore = Qdrant(
+        client=client,
+        collection_name=COLLECTION_NAME,
+        embeddings=embeddings,
+    )
 
-# ------------------ ONE-TIME INGEST ------------------
+    # ---- INGEST ONCE ----
+    base_text = """
+    India is a country in South Asia.
+    The capital of India is New Delhi.
+    New Delhi is located in the northern part of India.
+    India follows a parliamentary democratic system.
+    """
 
-base_text = """
-India is a country in South Asia.
-The capital of India is New Delhi.
-New Delhi is located in the northern part of India.
-India follows a parliamentary democratic system.
-"""
+    splitter = RecursiveCharacterTextSplitter(
+        chunk_size=800,
+        chunk_overlap=100
+    )
 
-splitter = RecursiveCharacterTextSplitter(
-    chunk_size=800,
-    chunk_overlap=100
-)
+    docs = splitter.create_documents([base_text])
+    vectorstore.add_documents(docs)
 
-docs = splitter.create_documents([base_text])
-vectorstore.add_documents(docs)
+    st.session_state.vectorstore = vectorstore
 
 # ------------------ LLM ------------------
 
@@ -78,6 +78,8 @@ st.subheader("❓ Ask a Question")
 question = st.text_input("Your question")
 
 if st.button("Ask") and question:
+    vectorstore = st.session_state.vectorstore
+
     docs = vectorstore.similarity_search(question, k=3)
 
     if not docs:
