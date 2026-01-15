@@ -37,14 +37,21 @@ client = QdrantClient(
     api_key=QDRANT_API_KEY,
 )
 
-if not client.collection_exists(COLLECTION_NAME):
+COLLECTION_NAME = "mini_rag_docs"
+
+existing_collections = [
+    c.name for c in client.get_collections().collections
+]
+
+if COLLECTION_NAME not in existing_collections:
     client.create_collection(
         collection_name=COLLECTION_NAME,
         vectors_config=VectorParams(
-            size=384,  
-            distance=Distance.COSINE
+            size=384,  # MiniLM embedding size
+            distance=Distance.COSINE,
         ),
     )
+
 
 embeddings = HuggingFaceEmbeddings(
     model_name="sentence-transformers/paraphrase-MiniLM-L3-v2"
