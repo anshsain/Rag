@@ -77,9 +77,12 @@ st.subheader("❓ Ask a Question")
 
 question = st.text_input("Your question")
 
-if st.button("Ask") and question:
-    vectorstore = st.session_state.vectorstore
+if st.button("Ask"):
+    if not question.strip():
+        st.warning("Please enter a question.")
+        st.stop()
 
+    vectorstore = st.session_state.vectorstore
     docs = vectorstore.similarity_search(question, k=3)
 
     if not docs:
