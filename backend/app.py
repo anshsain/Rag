@@ -18,32 +18,13 @@ if not GEMINI_API_KEY:
     st.error("❌ GEMINI_API_KEY not set")
     st.stop()
 
-# ------------------ QDRANT (IN-MEMORY) ------------------
-# 🔥 THIS CLEARS ALL ERRORS
-
-client = QdrantClient(":memory:")
-
 # ------------------ EMBEDDINGS ------------------
 
 embeddings = HuggingFaceEmbeddings(
     model_name="sentence-transformers/paraphrase-MiniLM-L3-v2"
 )
 
-vectorstore = Qdrant(
-    client=client,
-    collection_name="mini_rag_docs",
-    embeddings=embeddings,
-)
-
-# ------------------ LLM ------------------
-
-llm = ChatGoogleGenerativeAI(
-    model="gemini-1.5-flash",
-    google_api_key=GEMINI_API_KEY,
-    temperature=0,
-)
-
-# ------------------ ONE-TIME INGEST ------------------
+# ------------------ ONE-TIME DOCUMENT ------------------
 
 base_text = """
 India is a country in South Asia.
@@ -58,7 +39,26 @@ splitter = RecursiveCharacterTextSplitter(
 )
 
 docs = splitter.create_documents([base_text])
-vectorstore.add_documents(docs)
+
+# ------------------ QDRANT (IN-MEMORY, CORRECT WAY) ------------------
+# 🔥 THIS IS THE KEY FIX
+
+client = QdrantClient(":memory:")
+
+vectorstore = Qdrant.from_documents(
+    docs,
+    embedding=embeddings,
+    client=client,
+    collection_name="mini_rag_docs",
+)
+
+# ------------------ LLM ------------------
+
+llm = ChatGoogleGenerativeAI(
+    model="gemini-1.5-flash",
+    google_api_key=GEMINI_API_KEY,
+    temperature=0,
+)
 
 # ------------------ QUERY ------------------
 
