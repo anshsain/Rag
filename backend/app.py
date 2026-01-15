@@ -45,23 +45,32 @@ if "vectorstore" not in st.session_state:
         embeddings=embeddings,
     )
 
+    COLLECTION_NAME = "mini_rag_docs"
+
+if "vectorstore" not in st.session_state:
+    st.session_state.vectorstore = Qdrant(
+        client=client,
+        collection_name=COLLECTION_NAME,
+        embeddings=embeddings,
+    )
+
     # ---- INGEST ONCE ----
-    base_text = """
-    India is a country in South Asia.
-    The capital of India is New Delhi.
-    New Delhi is located in the northern part of India.
-    India follows a parliamentary democratic system.
-    """
+    if st.button("Ingest"):
+    if not text.strip():
+        st.warning("Please paste some text to ingest.")
+        st.stop()
 
     splitter = RecursiveCharacterTextSplitter(
         chunk_size=800,
         chunk_overlap=100
     )
 
-    docs = splitter.create_documents([base_text])
-    vectorstore.add_documents(docs)
+    docs = splitter.create_documents([text])
+    st.session_state.vectorstore.add_documents(docs)
+    st.session_state.has_data = True
 
-    st.session_state.vectorstore = vectorstore
+    st.success(f"Ingested {len(docs)} chunks")
+
 
 # ------------------ LLM ------------------
 
@@ -76,10 +85,13 @@ llm = ChatGoogleGenerativeAI(
 st.subheader("❓ Ask a Question")
 
 question = st.text_input("Your question")
-
 if st.button("Ask"):
     if not question.strip():
         st.warning("Please enter a question.")
+        st.stop()
+
+    if not st.session_state.has_data:
+        st.warning("Please ingest a document first.")
         st.stop()
 
     vectorstore = st.session_state.vectorstore
@@ -87,12 +99,13 @@ if st.button("Ask"):
 
     if not docs:
         st.warning("No relevant context found.")
-    else:
-        context = "\n\n".join(
-            [f"[{i+1}] {doc.page_content}" for i, doc in enumerate(docs)]
-        )
+        st.stop()
 
-        prompt = f"""
+    context = "\n\n".join(
+        [f"[{i+1}] {doc.page_content}" for i, doc in enumerate(docs)]
+    )
+
+    prompt = f"""
 Use ONLY the context below to answer.
 If the answer is not in the context, say you don't know.
 
@@ -101,15 +114,14 @@ Context:
 
 Question:
 {question}
-
-Answer with citations like [1], [2].
 """
 
-        response = llm.invoke(prompt)
+    response = llm.invoke(prompt)
 
-        st.markdown("### ✅ Answer")
-        st.write(response.content)
+    st.markdown("### ✅ Answer")
+    st.write(response.content)
 
-        st.markdown("### 📚 Sources")
-        for i, doc in enumerate(docs):
-            st.write(f"[{i+1}] {doc.page_content}")
+    st.markdown("### 📚 Sources")
+    for i, doc in enumerate(docs):
+        st.markdown(f"[{i+1}] {doc.page_content[:200]}...")
+
