@@ -71,6 +71,8 @@ if "vectorstore" not in st.session_state:
 
     st.success(f"Ingested {len(docs)} chunks")
 
+if "has_data" not in st.session_state:
+    st.session_state.has_data = False
 
 # ------------------ LLM ------------------
 
