@@ -56,7 +56,7 @@ if st.button("Ingest"):
 # ------------------ LLM ------------------
 
 llm = ChatGoogleGenerativeAI(
-    model="gemini-1.5-flash",
+    model="gemini-pro",
     google_api_key=GEMINI_API_KEY,
     temperature=0,
 )
@@ -97,10 +97,17 @@ Question:
 {question}
 """
 
+    try:
     response = llm.invoke(prompt)
 
     st.markdown("### ✅ Answer")
     st.write(response.content)
+
+    except Exception as e:
+        st.error("❌ LLM failed to generate an answer.")
+        st.code(str(e))
+        st.stop()
+
 
     st.markdown("### 📚 Sources")
     for i, doc in enumerate(docs):
