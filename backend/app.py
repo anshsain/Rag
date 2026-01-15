@@ -21,28 +21,26 @@ COLLECTION_NAME = "mini_rag_docs"
 EMBEDDING_DIM = 384  # MiniLM-L3-v2
 
 if not QDRANT_URL or not QDRANT_API_KEY or not GEMINI_API_KEY:
-    st.error(" Missing environment variables")
+    st.error("❌ Missing environment variables")
     st.stop()
 
-# ------------------ INIT CLIENT ------------------
+# ------------------ QDRANT CLIENT ------------------
 
 client = QdrantClient(
     url=QDRANT_URL,
     api_key=QDRANT_API_KEY,
 )
 
-# ------------------ ENSURE COLLECTION EXISTS ------------------
+# ------------------ FORCE CREATE COLLECTION ------------------
+# ⚠️ This is the KEY FIX
 
-existing = [c.name for c in client.get_collections().collections]
-
-if COLLECTION_NAME not in existing:
-    client.create_collection(
-        collection_name=COLLECTION_NAME,
-        vectors_config=VectorParams(
-            size=EMBEDDING_DIM,
-            distance=Distance.COSINE,
-        ),
-    )
+client.recreate_collection(
+    collection_name=COLLECTION_NAME,
+    vectors_config=VectorParams(
+        size=EMBEDDING_DIM,
+        distance=Distance.COSINE,
+    ),
+)
 
 # ------------------ EMBEDDINGS ------------------
 
@@ -82,7 +80,7 @@ if st.button("Ingest"):
         )
         docs = splitter.create_documents([text])
         vectorstore.add_documents(docs)
-        st.success(f"Ingested {len(docs)} chunks")
+        st.success(f"✅ Ingested {len(docs)} chunks")
 
 # ------------------ QUERY ------------------
 
@@ -113,5 +111,5 @@ Question:
 """
 
             response = llm.invoke(prompt)
-            st.markdown("### Answer")
+            st.markdown("### ✅ Answer")
             st.write(response.content)
