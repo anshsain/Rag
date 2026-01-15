@@ -10,7 +10,7 @@ from qdrant_client import QdrantClient
 # ------------------ CONFIG ------------------
 
 st.set_page_config(page_title="Mini RAG", layout="centered")
-st.title("📄 Mini RAG Application")
+st.title("Mini RAG Application")
 
 QDRANT_URL = os.getenv("QDRANT_URL")
 QDRANT_API_KEY = os.getenv("QDRANT_API_KEY")
