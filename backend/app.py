@@ -6,6 +6,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import Qdrant
 from qdrant_client import QdrantClient
+from qdrant_client.models import Distance, VectorParams
 
 # ------------------ PAGE CONFIG ------------------
 
@@ -29,13 +30,29 @@ client = QdrantClient(
     api_key=QDRANT_API_KEY,
 )
 
+COLLECTION_NAME = "mini_rag_docs"
+
+client = QdrantClient(
+    url=QDRANT_URL,
+    api_key=QDRANT_API_KEY,
+)
+
+if not client.collection_exists(COLLECTION_NAME):
+    client.create_collection(
+        collection_name=COLLECTION_NAME,
+        vectors_config=VectorParams(
+            size=384,  
+            distance=Distance.COSINE
+        ),
+    )
+
 embeddings = HuggingFaceEmbeddings(
     model_name="sentence-transformers/paraphrase-MiniLM-L3-v2"
 )
 
 vectorstore = Qdrant(
     client,
-    collection_name="mini_rag_docs",
+    collection_name=COLLECTION_NAME,
     embeddings=embeddings,
 )
 
@@ -83,7 +100,7 @@ if st.button("Ingest"):
         st.stop()
 
     splitter = RecursiveCharacterTextSplitter(
-        chunk_size=800,
+        chunk_size=900,
         chunk_overlap=100
     )
 
@@ -97,7 +114,7 @@ if st.button("Ingest"):
 
 # ------------------ QUERY ------------------
 
-st.subheader("❓ Ask a Question")
+st.subheader(" Ask a Question")
 
 question = st.text_input("Your question")
 
@@ -106,17 +123,17 @@ if st.button("Ask"):
         st.warning("Please enter a question.")
         st.stop()
 
-    # 1️⃣ Retrieve
+    # Retrieve
     candidate_docs = vectorstore.similarity_search(question, k=8)
 
     if not candidate_docs:
         st.warning("No relevant context found.")
         st.stop()
 
-    # 2️⃣ Rerank
+    # Rerank
     docs = rerank_documents(question, candidate_docs, llm, top_n=3)
 
-    # 3️⃣ Build context with citations
+    # Build context with citations
     context = "\n\n".join(
         [f"[{i+1}] {doc.page_content}" for i, doc in enumerate(docs)]
     )
@@ -133,13 +150,13 @@ Question:
 {question}
 """
 
-    # 4️⃣ LLM Answer
+    # LLM Answer
     response = llm.invoke(prompt)
 
     st.markdown("### Answer")
     st.write(response.content)
 
-    # 5️⃣ Sources
+    # Sources
     st.markdown("### Sources")
     for i, doc in enumerate(docs):
         source = doc.metadata.get("source", "unknown")
