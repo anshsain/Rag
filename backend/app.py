@@ -8,24 +8,26 @@ from langchain_community.vectorstores import Qdrant
 from qdrant_client import QdrantClient
 from qdrant_client.models import VectorParams, Distance
 
-# ------------------ CONFIG ------------------
+# ------------------ PAGE CONFIG ------------------
 
 st.set_page_config(page_title="Mini RAG", layout="centered")
 st.title("📄 Mini RAG Application")
+
+# ------------------ ENV CHECK ------------------
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 if not GEMINI_API_KEY:
     st.error("GEMINI_API_KEY not set")
     st.stop()
 
-# ------------------ INIT (RUN ONCE) ------------------
+# ------------------ SESSION INIT ------------------
 
 if "vectorstore" not in st.session_state:
-
+    # In-memory Qdrant (safe, no auth, no network)
     client = QdrantClient(":memory:")
 
     COLLECTION_NAME = "mini_rag_docs"
-    VECTOR_SIZE = 384
+    VECTOR_SIZE = 384  # MiniLM dimension
 
     client.create_collection(
         collection_name=COLLECTION_NAME,
@@ -39,30 +41,28 @@ if "vectorstore" not in st.session_state:
         model_name="sentence-transformers/paraphrase-MiniLM-L3-v2"
     )
 
-    vectorstore = Qdrant(
-        client=client,
-        collection_name=COLLECTION_NAME,
-        embeddings=embeddings,
-    )
-
-    COLLECTION_NAME = "mini_rag_docs"
-
-if "vectorstore" not in st.session_state:
     st.session_state.vectorstore = Qdrant(
         client=client,
         collection_name=COLLECTION_NAME,
         embeddings=embeddings,
     )
 
-    # ---- INGEST ONCE ----
-  if st.button("Ingest"):
+    st.session_state.has_data = False
+
+# ------------------ INGEST ------------------
+
+st.subheader("📥 Ingest Document")
+
+text = st.text_area("Paste text to ingest")
+
+if st.button("Ingest"):
     if not text.strip():
-        st.warning("Please paste some text to ingest.")
+        st.warning("Please paste some text.")
         st.stop()
 
     splitter = RecursiveCharacterTextSplitter(
         chunk_size=800,
-        chunk_overlap=100
+        chunk_overlap=100,
     )
 
     docs = splitter.create_documents([text])
@@ -85,6 +85,7 @@ llm = ChatGoogleGenerativeAI(
 st.subheader("❓ Ask a Question")
 
 question = st.text_input("Your question")
+
 if st.button("Ask"):
     if not question.strip():
         st.warning("Please enter a question.")
@@ -94,8 +95,7 @@ if st.button("Ask"):
         st.warning("Please ingest a document first.")
         st.stop()
 
-    vectorstore = st.session_state.vectorstore
-    docs = vectorstore.similarity_search(question, k=3)
+    docs = st.session_state.vectorstore.similarity_search(question, k=3)
 
     if not docs:
         st.warning("No relevant context found.")
@@ -124,4 +124,3 @@ Question:
     st.markdown("### 📚 Sources")
     for i, doc in enumerate(docs):
         st.markdown(f"[{i+1}] {doc.page_content[:200]}...")
-
