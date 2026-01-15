@@ -55,7 +55,7 @@ if "vectorstore" not in st.session_state:
     )
 
     # ---- INGEST ONCE ----
-   if st.button("Ingest"):
+  if st.button("Ingest"):
     if not text.strip():
         st.warning("Please paste some text to ingest.")
         st.stop()
