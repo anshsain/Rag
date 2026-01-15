@@ -55,10 +55,10 @@ if "vectorstore" not in st.session_state:
     )
 
     # ---- INGEST ONCE ----
-    if st.button("Ingest"):
-        if not text.strip():
-            st.warning("Please paste some text to ingest.")
-            st.stop()
+   if st.button("Ingest"):
+    if not text.strip():
+        st.warning("Please paste some text to ingest.")
+        st.stop()
 
     splitter = RecursiveCharacterTextSplitter(
         chunk_size=800,
@@ -66,13 +66,11 @@ if "vectorstore" not in st.session_state:
     )
 
     docs = splitter.create_documents([text])
+
     st.session_state.vectorstore.add_documents(docs)
     st.session_state.has_data = True
 
     st.success(f"Ingested {len(docs)} chunks")
-
-if "has_data" not in st.session_state:
-    st.session_state.has_data = False
 
 # ------------------ LLM ------------------
 
