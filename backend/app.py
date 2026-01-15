@@ -6,41 +6,22 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import Qdrant
 from qdrant_client import QdrantClient
-from qdrant_client.models import VectorParams, Distance
 
 # ------------------ CONFIG ------------------
 
 st.set_page_config(page_title="Mini RAG", layout="centered")
-st.title("Mini RAG Application")
+st.title("📄 Mini RAG Application")
 
-QDRANT_URL = os.getenv("QDRANT_URL")
-QDRANT_API_KEY = os.getenv("QDRANT_API_KEY")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
-COLLECTION_NAME = "mini_rag_docs"
-EMBEDDING_DIM = 384  # MiniLM-L3-v2
-
-if not QDRANT_URL or not QDRANT_API_KEY or not GEMINI_API_KEY:
-    st.error("❌ Missing environment variables")
+if not GEMINI_API_KEY:
+    st.error("❌ GEMINI_API_KEY not set")
     st.stop()
 
-# ------------------ QDRANT CLIENT ------------------
+# ------------------ QDRANT (IN-MEMORY) ------------------
+# 🔥 THIS CLEARS ALL ERRORS
 
-client = QdrantClient(
-    url=QDRANT_URL,
-    api_key=QDRANT_API_KEY,
-)
-
-# ------------------ FORCE CREATE COLLECTION ------------------
-# ⚠️ This is the KEY FIX
-
-client.recreate_collection(
-    collection_name=COLLECTION_NAME,
-    vectors_config=VectorParams(
-        size=EMBEDDING_DIM,
-        distance=Distance.COSINE,
-    ),
-)
+client = QdrantClient(":memory:")
 
 # ------------------ EMBEDDINGS ------------------
 
@@ -48,11 +29,9 @@ embeddings = HuggingFaceEmbeddings(
     model_name="sentence-transformers/paraphrase-MiniLM-L3-v2"
 )
 
-# ------------------ VECTOR STORE ------------------
-
 vectorstore = Qdrant(
     client=client,
-    collection_name=COLLECTION_NAME,
+    collection_name="mini_rag_docs",
     embeddings=embeddings,
 )
 
@@ -64,42 +43,40 @@ llm = ChatGoogleGenerativeAI(
     temperature=0,
 )
 
-# ------------------ INGEST ------------------
+# ------------------ ONE-TIME INGEST ------------------
 
-st.subheader("Ingest Document")
+base_text = """
+India is a country in South Asia.
+The capital of India is New Delhi.
+New Delhi is located in the northern part of India.
+India follows a parliamentary democratic system.
+"""
 
-text = st.text_area("Paste text to ingest")
+splitter = RecursiveCharacterTextSplitter(
+    chunk_size=800,
+    chunk_overlap=100
+)
 
-if st.button("Ingest"):
-    if not text.strip():
-        st.warning("Please paste some text.")
-    else:
-        splitter = RecursiveCharacterTextSplitter(
-            chunk_size=800,
-            chunk_overlap=100,
-        )
-        docs = splitter.create_documents([text])
-        vectorstore.add_documents(docs)
-        st.success(f"✅ Ingested {len(docs)} chunks")
+docs = splitter.create_documents([base_text])
+vectorstore.add_documents(docs)
 
 # ------------------ QUERY ------------------
 
-st.subheader("Ask a Question")
+st.subheader("❓ Ask a Question")
 
 question = st.text_input("Your question")
 
-if st.button("Ask"):
-    if not question.strip():
-        st.warning("Please enter a question.")
+if st.button("Ask") and question:
+    docs = vectorstore.similarity_search(question, k=3)
+
+    if not docs:
+        st.warning("No relevant context found.")
     else:
-        docs = vectorstore.similarity_search(question, k=3)
+        context = "\n\n".join(
+            [f"[{i+1}] {doc.page_content}" for i, doc in enumerate(docs)]
+        )
 
-        if not docs:
-            st.warning("No relevant context found.")
-        else:
-            context = "\n\n".join(d.page_content for d in docs)
-
-            prompt = f"""
+        prompt = f"""
 Use ONLY the context below to answer.
 If the answer is not in the context, say you don't know.
 
@@ -108,8 +85,15 @@ Context:
 
 Question:
 {question}
+
+Answer with citations like [1], [2].
 """
 
-            response = llm.invoke(prompt)
-            st.markdown("### ✅ Answer")
-            st.write(response.content)
+        response = llm.invoke(prompt)
+
+        st.markdown("### ✅ Answer")
+        st.write(response.content)
+
+        st.markdown("### 📚 Sources")
+        for i, doc in enumerate(docs):
+            st.write(f"[{i+1}] {doc.page_content}")
