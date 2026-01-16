@@ -10,6 +10,9 @@ from langchain_community.vectorstores import Chroma
 
 st.set_page_config(page_title="Mini RAG", layout="centered")
 st.title("📄 Mini RAG Application")
+# ---- SESSION STATE DEFAULTS ----
+if "has_data" not in st.session_state:
+    st.session_state.has_data = False
 
 # ------------------ ENV ------------------
 
