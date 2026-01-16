@@ -2,6 +2,8 @@ streamlit
 langchain
 langchain-community
 langchain-groq
+langchain-text-splitters
 sentence-transformers
-chromadb
 cohere
+pinecone
+python-dotenv
