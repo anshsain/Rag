@@ -91,16 +91,16 @@ if st.button("Ask"):
         [f"[{i+1}] {doc.page_content}" for i, doc in enumerate(docs)]
     )
 
-    prompt = f"""
-    Use ONLY the context below to answer.
-    If the answer is not in the context, say you don't know.
+prompt = f"""
+Use ONLY the context below to answer.
+If the answer is not in the context, say you don't know.
+   
+Context:
+{context}
     
-    Context:
-    {context}
-    
-    Question:
-    {question}
-    """
+Question:
+{question}
+"""
     
     try:
         response = llm.invoke(prompt)
