@@ -12,18 +12,7 @@ Users can ingest text, store embeddings in a vector database, retrieve relevant 
 ---
 
 ## Architecture
-User
-├── Ingest Text
-│ ├── Chunking (800 tokens, 100 overlap)
-│ ├── Embeddings (MiniLM)
-│ └── Vector Store (Chroma)
-│
-└── Ask Question
-├── Vector Retrieval (Top-K)
-├── Reranking (Cohere)
-├── LLM Answer (Groq)
-└── Citations
-
+User -> Ingest Text -> Chunking (800 tokens, 100 overlap) -> Embeddings (MiniLM) -> Vector Store (Chroma) -> Ask Question -> Vector Retrieval (Top-K) -> Reranking (Cohere) -> LLM Answer (Groq) -> Citations
 
 ---
 
@@ -48,7 +37,7 @@ User
 
 ---
 
-## 🔎 Retrieval & Reranking
+## Retrieval & Reranking
 
 1. **Initial retrieval**
    - Cosine similarity search
