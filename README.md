@@ -1,14 +1,12 @@
-# Mini RAG Application (AI Engineer Assessment – Track B)
+# Mini RAG Application 
 
 A minimal **Retrieval-Augmented Generation (RAG)** application built using **Streamlit**.  
 Users can ingest text, store embeddings in a vector database, retrieve relevant chunks, rerank them, and generate grounded answers using an LLM with citations.
 
 ---
 
-## 🚀 Live Demo
-
-🔗 **Live URL:** <https://6qcopzzur5b3eo5j5tymfu.streamlit.app/>
-
+**Live URL:** <https://6qcopzzur5b3eo5j5tymfu.streamlit.app/>
+**Resume Link:** <https://drive.google.com/file/d/1s0uzvob_2NpCEj2M-V6NPttDjTFw9m9C/view?usp=sharing> 
 ---
 
 ## Architecture
@@ -67,3 +65,17 @@ This improves relevance before passing context to the LLM.
 | What is the capital of India? | New Delhi | ✅ Correct |
 | Is India in Europe? | I don’t know | ✅ Correct |
 
+## Limitations & Trade-offs
+
+- In-memory vector store (data resets on reload)
+- No document upload (text paste only)
+- No persistent evaluation pipeline
+- Limited cost / token tracking
+
+## What I’d Do Next
+
+-Persist vector DB
+- File uploads
+- Automated eval pipelines
+- Token / cost dashboards
+- Multi-document ingestion
