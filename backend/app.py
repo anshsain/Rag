@@ -102,14 +102,15 @@ Question:
 {question}
 """
 
-    try:
-        response = llm.invoke(prompt)
+   try:
+    response = llm.invoke(prompt)
+    st.markdown("### ✅ Answer")
+    st.write(response.content)
 
-        st.markdown("### ✅ Answer")
-        st.write(response.content)
+    st.markdown("### 📚 Sources")
+    for i, doc in enumerate(docs):
+        st.markdown(f"[{i+1}] {doc.page_content[:200]}...")
 
-        st.markdown("### 📚 Sources")
-        for i, doc in enumerate(docs):
-            st.markdown(f"[{i+1}] {doc.page_content[:200]}...")
-    except Exception as e:
-        st.error("LLM failed. Check API key / quota.")
+except Exception as e:
+    st.error("LLM failed.")
+    st.exception(e)
