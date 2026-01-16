@@ -91,25 +91,31 @@ if st.button("Ask"):
         [f"[{i+1}] {doc.page_content}" for i, doc in enumerate(docs)]
     )
 
-prompt = f"""
+    if not context.strip():
+        st.warning("Empty context. Cannot answer.")
+        st.stop()
+
+    prompt = f"""
 Use ONLY the context below to answer.
 If the answer is not in the context, say you don't know.
-   
+
 Context:
 {context}
-    
+
 Question:
 {question}
 """
+
     try:
         response = llm.invoke(prompt)
+
         st.markdown("### ✅ Answer")
         st.write(response.content)
-    
+
         st.markdown("### 📚 Sources")
         for i, doc in enumerate(docs):
             st.markdown(f"[{i+1}] {doc.page_content[:200]}...")
-    
+
     except Exception as e:
         st.error("LLM failed.")
         st.exception(e)
