@@ -26,7 +26,6 @@ if "vectorstore" not in st.session_state:
 if "has_data" not in st.session_state:
     st.session_state.has_data = False
 
-# Embeddings MUST be created once
 if "embeddings" not in st.session_state:
     st.session_state.embeddings = HuggingFaceEmbeddings(
         model_name="sentence-transformers/paraphrase-MiniLM-L3-v2"
@@ -50,7 +49,6 @@ if st.button("Ingest"):
 
     docs = splitter.create_documents([text])
 
-    # Create vectorstore ONLY here
     st.session_state.vectorstore = Chroma.from_documents(
         docs,
         st.session_state.embeddings,
@@ -60,8 +58,9 @@ if st.button("Ingest"):
     st.success(f"Ingested {len(docs)} chunks")
 
 # ------------------ LLM ------------------
+
 llm = ChatGroq(
-    groq_api_key=GROQ_API_KEY,
+    groq_api_key=GROQ_API_KEY,   # 🔥 THIS WAS THE BUG
     model="llama3-8b-8192",
     temperature=0,
 )
@@ -104,6 +103,7 @@ Question:
 
     try:
         response = llm.invoke(prompt)
+
         st.markdown("### ✅ Answer")
         st.write(response.content)
 
