@@ -72,11 +72,12 @@ if st.button("Ask"):
         st.warning("Please enter a question.")
         st.stop()
 
-    if st.session_state.vectorstore is None:
+    if not st.session_state.has_data:
         st.warning("Please ingest a document first.")
         st.stop()
 
-    docs = st.session_state.vectorstore.similarity_search(question, k=3)
+    vectorstore = st.session_state.vectorstore
+    docs = vectorstore.similarity_search(question, k=3)
 
     if not docs:
         st.warning("No relevant context found.")
@@ -98,16 +99,18 @@ Question:
 """
 
     try:
-    response = llm.invoke(prompt)
+        response = llm.invoke(prompt)
 
-    st.markdown("### ✅ Answer")
-    st.write(response.content)
+        st.markdown("### ✅ Answer")
+        st.write(response.content)
+
+        st.markdown("### 📚 Sources")
+        for i, doc in enumerate(docs):
+            st.markdown(f"[{i+1}] {doc.page_content[:200]}...")
 
     except Exception as e:
         st.error("❌ LLM failed to generate an answer.")
-        st.code(str(e))
-        st.stop()
-
+        st.write(str(e))
 
     st.markdown("### 📚 Sources")
     for i, doc in enumerate(docs):
