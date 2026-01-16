@@ -6,15 +6,12 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import Chroma
 
-# ------------------ PAGE CONFIG ------------------
+# ------------------ PAGE ------------------
 
 st.set_page_config(page_title="Mini RAG", layout="centered")
 st.title("📄 Mini RAG Application")
-# ---- SESSION STATE DEFAULTS ----
-if "has_data" not in st.session_state:
-    st.session_state.has_data = False
 
-# ------------------ ENV ------------------
+# ------------------ KEYS ------------------
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 if not GEMINI_API_KEY:
@@ -23,13 +20,17 @@ if not GEMINI_API_KEY:
 
 # ------------------ SESSION INIT ------------------
 
+if "vectorstore" not in st.session_state:
+    st.session_state.vectorstore = None
+
+if "has_data" not in st.session_state:
+    st.session_state.has_data = False
+
+# Embeddings MUST be created once
 if "embeddings" not in st.session_state:
     st.session_state.embeddings = HuggingFaceEmbeddings(
         model_name="sentence-transformers/paraphrase-MiniLM-L3-v2"
     )
-
-if "vectorstore" not in st.session_state:
-    st.session_state.vectorstore = None
 
 # ------------------ INGEST ------------------
 
@@ -44,22 +45,24 @@ if st.button("Ingest"):
 
     splitter = RecursiveCharacterTextSplitter(
         chunk_size=800,
-        chunk_overlap=100,
+        chunk_overlap=100
     )
 
     docs = splitter.create_documents([text])
 
+    # Create vectorstore ONLY here
     st.session_state.vectorstore = Chroma.from_documents(
         docs,
         st.session_state.embeddings,
     )
 
+    st.session_state.has_data = True
     st.success(f"Ingested {len(docs)} chunks")
 
 # ------------------ LLM ------------------
 
 llm = ChatGoogleGenerativeAI(
-    model="gemini-pro",
+    model="gemini-1.5-flash",
     google_api_key=GEMINI_API_KEY,
     temperature=0,
 )
@@ -79,8 +82,7 @@ if st.button("Ask"):
         st.warning("Please ingest a document first.")
         st.stop()
 
-    vectorstore = st.session_state.vectorstore
-    docs = vectorstore.similarity_search(question, k=3)
+    docs = st.session_state.vectorstore.similarity_search(question, k=3)
 
     if not docs:
         st.warning("No relevant context found.")
@@ -103,18 +105,11 @@ Question:
 
     try:
         response = llm.invoke(prompt)
-
         st.markdown("### ✅ Answer")
         st.write(response.content)
 
         st.markdown("### 📚 Sources")
         for i, doc in enumerate(docs):
             st.markdown(f"[{i+1}] {doc.page_content[:200]}...")
-
     except Exception as e:
-        st.error("❌ LLM failed to generate an answer.")
-        st.write(str(e))
-
-    st.markdown("### 📚 Sources")
-    for i, doc in enumerate(docs):
-        st.markdown(f"[{i+1}] {doc.page_content[:200]}...")
+        st.error("LLM failed. Check API key / quota.")
