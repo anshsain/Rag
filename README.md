@@ -7,7 +7,8 @@ Users can ingest text, store embeddings in a vector database, retrieve relevant 
 
 **Live URL:** <https://6qcopzzur5b3eo5j5tymfu.streamlit.app/>
 
-**Resume Link:** <https://drive.google.com/file/d/1s0uzvob_2NpCEj2M-V6NPttDjTFw9m9C/view?usp=sharing> 
+**Resume Link:** <https://drive.google.com/file/d/1s0uzvob_2NpCEj2M-V6NPttDjTFw9m9C/view?usp=sharing>
+
 ---
 
 ## Architecture
@@ -74,9 +75,11 @@ This improves relevance before passing context to the LLM.
 - Limited cost / token tracking
 
 ## What I’d Do Next
--Persist vector DB
+- Persist vector DB
 - File uploads
 - Automated eval pipelines
+- Token / cost dashboards
+- Multi-document ingestion
 
 ## Example Questions & Answers
 
@@ -124,5 +127,3 @@ A response is considered successful if the answer is fully grounded in the retri
 This behavior demonstrates correct RAG principles: retrieval-driven grounding, controlled generation, and graceful failure in the absence of evidence. The system prioritizes factual correctness and transparency over completeness.
 
 Given the limited scope and single-document ingestion setup, this approach provides a clear and reliable demonstration of retrieval-augmented generation.
-- Token / cost dashboards
-- Multi-document ingestion
