@@ -6,6 +6,7 @@ Users can ingest text, store embeddings in a vector database, retrieve relevant 
 ---
 
 **Live URL:** <https://6qcopzzur5b3eo5j5tymfu.streamlit.app/>
+
 **Resume Link:** <https://drive.google.com/file/d/1s0uzvob_2NpCEj2M-V6NPttDjTFw9m9C/view?usp=sharing> 
 ---
 
@@ -73,9 +74,55 @@ This improves relevance before passing context to the LLM.
 - Limited cost / token tracking
 
 ## What I’d Do Next
-
 -Persist vector DB
 - File uploads
 - Automated eval pipelines
+
+## Example Questions & Answers
+
+The following examples demonstrate the behavior of the RAG system using an ingested document.
+
+### Q1
+**Question:** What is the capital of India?  
+**Answer:** New Delhi is the capital of India.  
+**Source:** Chunk containing “The capital of India is New Delhi.”
+
+---
+
+### Q2
+**Question:** Is India located in Europe?  
+**Answer:** I don’t know based on the provided context.  
+**Explanation:** The ingested document does not mention Europe.
+
+---
+
+### Q3
+**Question:** What is India’s financial capital?  
+**Answer:** Mumbai is the financial capital of India.  
+**Source:** Chunk mentioning Mumbai.
+
+---
+
+### Q4
+**Question:** What continent is India part of?  
+**Answer:** India is part of South Asia.  
+**Source:** Chunk describing India’s geographic location.
+
+---
+
+### Q5
+**Question:** What is the population of India?  
+**Answer:** I don’t know based on the provided context.  
+**Explanation:** Population data was not present in the ingested document.
+
+## Short Note on System Behavior and Success Criteria
+
+The success of this RAG system is evaluated qualitatively rather than through formal precision or recall metrics.
+
+A response is considered successful if the answer is fully grounded in the retrieved context and correctly addresses the user’s query. When the retrieved documents do not contain sufficient information, the system explicitly responds with “I don’t know,” avoiding hallucinations.
+
+This behavior demonstrates correct RAG principles: retrieval-driven grounding, controlled generation, and graceful failure in the absence of evidence. The system prioritizes factual correctness and transparency over completeness.
+
+Given the limited scope and single-document ingestion setup, this approach provides a clear and reliable demonstration of retrieval-augmented generation.
 - Token / cost dashboards
 - Multi-document ingestion
