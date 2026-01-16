@@ -102,7 +102,7 @@ Question:
 {question}
 """
 
-   try:
+try:
     response = llm.invoke(prompt)
     st.markdown("### ✅ Answer")
     st.write(response.content)
