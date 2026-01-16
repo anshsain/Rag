@@ -2,7 +2,7 @@ import os
 import streamlit as st
 
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_groq import ChatGroq
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import Chroma
 
@@ -13,9 +13,9 @@ st.title("📄 Mini RAG Application")
 
 # ------------------ KEYS ------------------
 
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-if not GEMINI_API_KEY:
-    st.error("GEMINI_API_KEY not set")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+if not GROQ_API_KEY:
+    st.error("GROQ_API_KEY not set")
     st.stop()
 
 # ------------------ SESSION INIT ------------------
@@ -60,10 +60,9 @@ if st.button("Ingest"):
     st.success(f"Ingested {len(docs)} chunks")
 
 # ------------------ LLM ------------------
-
-llm = ChatGoogleGenerativeAI(
-    model="gemini-1.5-flash",
-    google_api_key=GEMINI_API_KEY,
+llm = ChatGroq(
+    api_key=GROQ_API_KEY,
+    model="llama3-8b-8192",
     temperature=0,
 )
 
