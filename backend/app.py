@@ -7,6 +7,7 @@ from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import Chroma
 
 # ------------------ PAGE ------------------
+st.write("GROQ_API_KEY present:", bool(os.getenv("GROQ_API_KEY")))
 
 st.set_page_config(page_title="Mini RAG", layout="centered")
 st.title("📄 Mini RAG Application")
