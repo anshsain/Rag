@@ -62,7 +62,7 @@ if st.button("Ingest"):
 
 llm = ChatGroq(
     groq_api_key=GROQ_API_KEY,   # 🔥 THIS WAS THE BUG
-    model="mixtral-8x7b-32768",
+    model="llama3-8b-8192",
     temperature=0,
 )
 
