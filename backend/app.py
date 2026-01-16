@@ -10,7 +10,7 @@ from langchain_community.vectorstores import Chroma
 st.write("GROQ_API_KEY present:", bool(os.getenv("GROQ_API_KEY")))
 
 st.set_page_config(page_title="Mini RAG", layout="centered")
-st.title("📄 Mini RAG Application")
+st.title("Mini RAG Application")
 
 # ------------------ KEYS ------------------
 
@@ -34,7 +34,7 @@ if "embeddings" not in st.session_state:
 
 # ------------------ INGEST ------------------
 
-st.subheader("📥 Ingest Document")
+st.subheader("Ingest Document")
 
 text = st.text_area("Paste text to ingest")
 
@@ -68,7 +68,7 @@ llm = ChatGroq(
 
 # ------------------ QUERY ------------------
 
-st.subheader("❓ Ask a Question")
+st.subheader("Ask a Question")
 
 question = st.text_input("Your question")
 
@@ -109,10 +109,10 @@ Question:
     try:
         response = llm.invoke(prompt)
 
-        st.markdown("### ✅ Answer")
+        st.markdown("### Answer")
         st.write(response.content)
 
-        st.markdown("### 📚 Sources")
+        st.markdown("### Sources")
         for i, doc in enumerate(docs):
             st.markdown(f"[{i+1}] {doc.page_content[:200]}...")
 
