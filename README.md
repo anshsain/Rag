@@ -8,9 +8,6 @@ Users can ingest text, store embeddings in a **hosted vector database (Pinecone)
 **Live URL:**  
 https://6qcopzzur5b3eo5j5tymfu.streamlit.app/
 
-**Resume Link:**  
-https://drive.google.com/file/d/1s0uzvob_2NpCEj2M-V6NPttDjTFw9m9C/view?usp=sharing
-
 ---
 
 ## Architecture
