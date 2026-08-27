@@ -27,7 +27,7 @@ co = cohere.Client(COHERE_API_KEY)
 
 llm = ChatGroq(
     groq_api_key=GROQ_API_KEY,
-    model="llama-3.1-8b-instant",
+    model="openai/gpt-oss-20b",
     temperature=0,
 )
 
