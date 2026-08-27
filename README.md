@@ -32,7 +32,7 @@ User
 | Frontend | Streamlit |
 | Embeddings | sentence-transformers/paraphrase-MiniLM-L3-v2 |
 | Vector Database | Pinecone (hosted, dense vectors) |
-| LLM | Groq (LLaMA 3.1 8B Instant) |
+| LLM | Groq (openai/gpt-oss-20b) |
 | Reranker | Cohere Rerank v3 |
 | Chunking / LLM Orchestration | LangChain (non-vector components) |
 
@@ -130,7 +130,7 @@ This ensures grounded, non-hallucinated responses.
 
 ---
 
-## Short Note on System Behavior & Success Criteria
+## Short Note on System Behaviour & Success Criteria
 
 The system is evaluated qualitatively rather than through formal precision or recall metrics.
 
